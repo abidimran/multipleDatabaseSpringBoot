@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<!-- xmlns:th="http://www.thymeleaf.org"> -->
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<link rel="stylesheet" type="text/css"
+	href="webjars/bootstrap/3.3.7/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="/webjars/font-awesome/4.7.0/css/font-awesome.min.css"></link>
+<link href="css/styles.css" rel="stylesheet" />
+<script src="webjars/angularjs/1.4.9/angular.js"></script>
+<script src="webjars/angular-material/0.7.1/angular-material.js"></script>
+<script src="webjars/chartjs/2.4.0/Chart.js"></script>
+</head>
+
+<body ng-app="ttrApp" ng-controller="ttrCtrl">
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header" ng-class="{active: highLight=='home'}">				
+				<a class="navbar-brand" href="#/" ng-click="home();highLight='home'"><span
+					class="glyphicon glyphicon-home"></span></a>
+			</div>
+			<div id="navbar" class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">					
+					<li ng-class="{active: highLight=='refresh'}"><a
+						href="#/refreshStats"
+						ng-click="refreshStats('4');highLight='refresh'">Refresh Stats</a></li>
+					<li ng-class="{active: highLight=='us'}"><a href="#/US"
+						ng-click="invoke('us');highLight='us'">US</a></li>
+					<li ng-class="{active: highLight=='anz'}"><a href="#/ANZ"
+						ng-click="invoke('anz');highLight='anz'">ANZ</a></li>
+					<li ng-class="{active: highLight=='sa'}"><a href="#/SA"
+						ng-click="invoke('sa');highLight='sa'">SA</a></li>
+					<li ng-class="{active: highLight=='ca'}"><a href="#/Canada"
+						ng-click="invoke('canada');highLight='ca'">Canada</a></li>
+					<li ng-class="{active: highLight=='india'}"><a href="#/India"
+						ng-click="invoke('india');highLight='india'">India</a></li>
+					<li ng-class="{active: highLight=='uk'}"><a href="#/UK"
+						ng-click="invoke('uk');highLight='uk'">UK</a></li>
+					<li ng-class="{active: highLight=='ttr'}"><a href="#/ttr"
+						ng-click="displayttr();highLight='ttr'">TTR Dashboard</a></li>
+					<li ng-class="{active: highLight=='dq'}"><a href="#/dq"
+						ng-click="displaydq();highLight='dq'">DQ Dashboard</a></li>
+					<li ng-class="{active: highLight=='twitter'}"><a
+						class="fa fa-twitter" href="#/twitter"
+						ng-click="displaytwitter();highLight='twitter'">Twitter</a></li>					
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#/"><span class="glyphicon glyphicon-user"></span>
+							Sign Up</a></li>
+					<li><a href="#/"><span class="glyphicon glyphicon-log-in"></span>
+							Login</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div id="container">
+		<span ng-show="page=='home'"
+			style="font-weight: bold; color: white; background-color: #337ab7;">Open
+			TTR(#<span th:text="${#lists.size(ttrCount)}" />):
+		</span>
+		<mark ng-show="page=='home'" th:each="item : ${ttrCount}">
+			<a th:title="${item['cf_agents']}" style="font-weight: bold;"
+				th:href="'https://blrbugzilla.yodlee.com/show_bug.cgi?id='+${item['bug_id']}"
+				target="_blank" th:text="${item['bug_id']}" />
+		</mark>
+		<canvas id="closedBugs" ng-show="page=='home'"></canvas>
+		<div class="btn-group" data-toggle="buttons" ng-show="page=='dash'">
+			<label class="btn btn-primary active" ng-click="refreshStats('4')">
+				<input type="radio" name="options" id="option1" checked="true">4
+				Hours</input>
+			</label> <label class="btn btn-primary" ng-click="refreshStats('24')">
+				<input type="radio" name="options" id="option2">24 Hours</input>
+			</label>
+			<!-- <label class="btn btn-primary" ng-click="refreshStats('week')">
+				<input type="radio" name="options" id="option3">7 Days</input>
+			</label> -->
+		</div>
+		<div class="text-center" ng-if="dataLoading">
+			<img src="image/ajax-loader.gif" /><span>Loading, Please
+				wait...</span>
+		</div>
+		<div ng-if="page=='dash'">
+			<table class="table text-justify">
+				<caption style="font-weight: bold; padding: 0px 0px 0px 15px;">
+					Note: It contains last {{duration}} Hrs TTR Refresh Stats, Data
+					last updated at <span>{{lastrefreshtime.hour}}:<span
+						ng-if="10>lastrefreshtime.minute">0</span>{{lastrefreshtime.minute}}
+						Hrs IST.
+					</span>
+				</caption>
+				<tr>
+					<td><table class="table table-striped">
+							<caption>TTR Portfolio : Success Rate</caption>
+							<tr>
+								<th>LOCALE</th>
+								<th>>=95%</th>
+								<th>94-95%</th>
+								<th>92.5-94%</th>
+								<th>91-92.5%</th>
+								<th>&lt;91%</th>
+							</tr>
+							<tr ng-repeat="item in output1">
+								<!-- <td></td> -->
+								<td>{{item.locale}}</td>
+								<td ng-class="{'color1':(item.success/item.total*100)>=95}"><a
+									style="font-weight: bold; color: black;"
+									ng-show="(item.success/item.total*100)>=95"
+									ng-click="invoke(item.locale)">{{item.success/item.total*100|number:2}}%</a></td>
+								<td
+									ng-class="{'color2':checkCondition(item.success/item.total*100,94,95)}"><a
+									style="font-weight: bold; color: black;"
+									ng-show="checkCondition(item.success/item.total*100,94,95)"
+									ng-click="invoke(item.locale)">{{item.success/item.total*100|number:2}}%</a></td>
+								<td
+									ng-class="{'color3':checkCondition(item.success/item.total*100,92.5,94)}"><a
+									style="font-weight: bold; color: black;"
+									ng-show="checkCondition(item.success/item.total*100,92.5,94)"
+									ng-click="invoke(item.locale)">{{item.success/item.total*100|number:2}}%</a></td>
+								<td
+									ng-class="{'color4':checkCondition(item.success/item.total*100,91,92.5)}"><a
+									style="font-weight: bold; color: black;"
+									ng-show="checkCondition(item.success/item.total*100,91,92.5)"
+									ng-click="invoke(item.locale)">{{item.success/item.total*100|number:2}}%</a></td>
+								<td ng-class="{'color5':91>(item.success/item.total*100)}"><a
+									style="font-weight: bold; color: black;"
+									ng-show="91>(item.success/item.total*100)"
+									ng-click="invoke(item.locale)">{{item.success/item.total*100|number:2}}%</a></td>
+							</tr>
+						</table></td>
+					<td><table class="table table-striped">
+							<caption>TTR Portfolio : Locale Contribution breakup</caption>
+							<tr ng-init="total=100/output1[1].total">
+								<th>LOCALE</th>
+								<th>TOTAL</th>
+								<th>SUCCESS</th>
+								<th>AGENT</th>
+								<th>SITE</th>
+								<th>UAR</th>
+								<th>INFRA</th>
+								<th>NULL_CII</th>
+							</tr>
+							<tr>
+								<td>{{output1[0].locale}}</td>
+								<td>{{output1[0].total/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].success/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].agent/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].site/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].uar/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].infra/output1[0].total*100|number:2}}%</td>
+								<td>{{output1[0].null_cii/output1[0].total*100|number:2}}%</td>
+							</tr>
+							<tr ng-repeat="item in output1" ng-if="item.locale!='US'">
+								<td>{{item.locale}}</td>
+								<td>{{item.total*total|number:2}}%</td>
+								<td>{{item.success*total|number:2}}%</td>
+								<td>{{item.agent*total|number:2}}%</td>
+								<td>{{item.site*total|number:2}}%</td>
+								<td>{{item.uar*total|number:2}}%</td>
+								<td>{{item.infra*total|number:2}}%</td>
+								<td>{{item.null_cii*total|number:2}}%</td>
+							</tr>
+						</table></td>
+				</tr>
+				<tr>
+					<td><table class="table table-striped">
+							<caption>TTR Portfolio : Locale Overview</caption>
+
+							<tr>
+								<th>LOCALE</th>
+								<th>SUCCESS</th>
+								<th>AGENT</th>
+								<th>SITE</th>
+								<th>UAR</th>
+								<th>INFRA</th>
+								<th>NULL_CII</th>
+							</tr>
+							<tr ng-repeat="item in output1">
+								<td>{{item.locale}}</td>
+								<td>{{item.success/item.total*100|number:2}}%</td>
+								<td>{{item.agent/item.total*100|number:2}}%</td>
+								<td>{{item.site/item.total*100|number:2}}%</td>
+								<td>{{item.uar/item.total*100|number:2}}%</td>
+								<td>{{item.infra/item.total*100|number:2}}%</td>
+								<td>{{item.null_cii/item.total*100|number:2}}%</td>
+							</tr>
+						</table></td>
+					<td><table class="table table-striped table-responsive">
+							<caption>TTR Portfolio : Refresh count on day</caption>
+							<tr>
+								<th>LOCALE</th>
+								<th>TOTAL</th>
+								<th>SUCCESS</th>
+								<th>AGENT</th>
+								<th>SITE</th>
+								<th>UAR</th>
+								<th>INFRA</th>
+								<th>NULL_CII</th>
+							</tr>
+							<tr ng-repeat="item in output1">
+								<td>{{item.locale}}</td>
+								<td>{{item.total}}</td>
+								<td>{{item.success}}</td>
+								<td>{{item.agent}}</td>
+								<td>{{item.site}}</td>
+								<td>{{item.uar}}</td>
+								<td>{{item.infra}}</td>
+								<td>{{item.null_cii}}</td>
+							</tr>
+						</table></td>
+				</tr>
+				<tr>
+					<td>
+						<table class="table table-striped">
+							<caption>ILS Stats</caption>
+							<tr>
+								<th>LOCALE</th>
+								<th>TOTAL</th>
+								<th>SUCCESS</th>
+								<th>AGENT</th>
+								<th>SITE</th>
+								<th>UAR</th>
+								<th>INFRA</th>
+								<th>NULL_CII</th>
+							</tr>
+							<tr ng-repeat="item in ilsRefreshData" ng-if="item.ils">
+								<td>{{item.locale}}</td>
+								<td>{{item.total}}</td>
+								<td
+									ng-class="{'color1':(item.success/item.total*100)>=95 ,
+									'color2':checkCondition(item.success/item.total*100,94,95) ,
+									'color3':checkCondition(item.success/item.total*100,92.5,94) ,
+									'color4':checkCondition(item.success/item.total*100,91,92.5) ,
+									'color5':91>(item.success/item.total*100)}"
+									style="font-weight: bold; color: black;" data-toggle="tooltip"
+									title="{{item.success}}">{{item.success/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.agent}}">{{item.agent/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.site}}">
+									{{item.site/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.uar}} ">{{item.uar/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.infra}}">
+									{{item.infra/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.null_cii}} ">{{item.null_cii/item.total*100|number:2}}%</td>
+							</tr>
+						</table>
+					</td>
+					<td>
+						<table class="table table-striped table-responsive">
+							<caption>NON-ILS Stats</caption>
+							<tr>
+								<th>LOCALE</th>
+								<th>TOTAL</th>
+								<th>SUCCESS</th>
+								<th>AGENT</th>
+								<th>SITE</th>
+								<th>UAR</th>
+								<th>INFRA</th>
+								<th>NULL_CII</th>
+							</tr>
+							<tr ng-repeat="item in ilsRefreshData" ng-if="!item.ils">
+								<td>{{item.locale}}</td>
+								<td>{{item.total}}</td>
+								<td
+									ng-class="{'color1':(item.success/item.total*100)>=95 ,
+									'color2':checkCondition(item.success/item.total*100,94,95) ,
+									'color3':checkCondition(item.success/item.total*100,92.5,94) ,
+									'color4':checkCondition(item.success/item.total*100,91,92.5) ,
+									'color5':91>(item.success/item.total*100)}"
+									style="font-weight: bold; color: black;" data-toggle="tooltip"
+									title="{{item.success}}">{{item.success/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.agent}}">{{item.agent/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.site}}">
+									{{item.site/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.uar}} ">{{item.uar/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.infra}}">
+									{{item.infra/item.total*100|number:2}}%</td>
+								<td data-toggle="tooltip" title="{{item.null_cii}} ">{{item.null_cii/item.total*100|number:2}}%</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+
+			</table>
+
+
+		</div>
+		<div ng-if="page=='locale'" ng-init="limit=15">
+			<div align="center" class="alert alert-info" ng-if="ttrId!=''">
+				<span ng-if="ttrId=='1111111'"> TTR already raised for this
+					agent. </span>
+				<div ng-if="ttrId!='1111111'">
+					TTR Raised with Bug ID:<a
+						ng-href="https://blrbugzilla.yodlee.com/show_bug.cgi?id={{ttrId}}"
+						target="_blank"><span style="color: #FF0000;">{{ttrId}}</span></a>
+				</div>
+			</div>
+
+			<table class="table table-striped">
+				<caption style="font-weight: bold; padding: 0px 0px 0px 15px;">
+					Note: It contains last 4 Hrs TTR Refresh Stats, Data last updated
+					at <span>{{lastrefreshtime.hour}}:<span
+						ng-if="10>lastrefreshtime.minute">0</span>{{lastrefreshtime.minute}}
+						Hrs IST.
+					</span>
+				</caption>
+				<tr>
+					<th>S.NO.</th>
+					<th
+						ng-click="orderByField='class_name'; reverseSort = !reverseSort">AGENT
+						NAME <span
+						ng-show="checkOrder(orderByField,'class_name',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'class_name',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th
+						ng-click="orderByField='total-null_cii'; reverseSort = !reverseSort">TOTAL
+						<span
+						ng-show="checkOrder(orderByField,'total-null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'total-null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th ng-click="orderByField='success'; reverseSort = !reverseSort">SUCCESS
+						<span ng-show="checkOrder(orderByField,'success',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'success',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th
+						ng-click="orderByField='agent_errors'; reverseSort = !reverseSort">AGENT
+						<span
+						ng-show="checkOrder(orderByField,'agent_errors',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'agent_errors',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th
+						ng-click="orderByField='site_errors'; reverseSort = !reverseSort">SITE
+						<span ng-show="checkOrder(orderByField,'site_errors',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'site_errors',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th
+						ng-click="orderByField='uar_error-null_cii'; reverseSort = !reverseSort">UAR
+						<span
+						ng-show="checkOrder(orderByField,'uar_error-null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'uar_error-null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th
+						ng-click="orderByField='infra_error'; reverseSort = !reverseSort">INFRA
+						<span ng-show="checkOrder(orderByField,'infra_error',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'infra_error',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th ng-click="orderByField='null_cii'; reverseSort = !reverseSort">NULL_CII
+						<span ng-show="checkOrder(orderByField,'null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'null_cii',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th ng-click="orderByField='latency'; reverseSort = !reverseSort">LATENCY
+						<span ng-show="checkOrder(orderByField,'latency',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'latency',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th ng-click="orderByField='bugId'; reverseSort = !reverseSort">TTR
+						<span ng-show="checkOrder(orderByField,'bugId',reverseSort)"
+						class="glyphicon glyphicon-chevron-down"></span> <span
+						ng-show="!checkOrder(orderByField,'bugId',reverseSort)"
+						class="glyphicon glyphicon-chevron-up"></span>
+					</th>
+					<th></th>
+					<!-- <th>CACHE REFRESH</th> -->
+					<!-- <th>ILS</th> -->
+				</tr>
+				<tr
+					ng-repeat="user in output |limitTo:limit| orderBy:orderByField:reverseSort">
+					<td>{{ $index + 1 }}</td>
+					<td>{{user.class_name}}<sup ng-show="user.ils"
+						style="color: blue; font-weight: bold; font-style: oblique;">ils</sup><span
+						ng-show="user.priority" class="glyphicon glyphicon-bell"
+						style="color: red"></span></td>
+					<td>{{user.total-user.null_cii}}</td>
+					<td>{{user.success}}<span style="color: #004080;">
+							({{user.success/(user.total-user.null_cii)*100|number:2}}%)</span></td>
+					<td>{{user.agent_errors}}<span style="color: #004080;">
+							({{user.agent_errors/(user.total-user.null_cii)*100|number:2}}%)</span></td>
+					<td>{{user.site_errors}}<span style="color: #004080;">
+							({{user.site_errors/(user.total-user.null_cii)*100|number:2}}%)</span></td>
+					<td>{{user.uar_error-user.null_cii}}<span
+						style="color: #004080;">
+							({{(user.uar_error-user.null_cii)/(user.total-user.null_cii)*100|number:2}}%)</span></td>
+					<td>{{user.infra_error}}<span style="color: #004080;">
+							({{user.infra_error/(user.total-user.null_cii)*100|number:2}}%)</span></td>
+					<td>{{user.null_cii}}<span style="color: #004080;">
+							({{user.null_cii/(user.total)*100|number:2}}%)</span></td>
+					<td>{{user.latency}}</td>
+					<td><p class="text-justify" ng-if="!user.bugId">
+							<select ng-model="error" ng-init="error=''">
+								<option value=''>Select</option>
+								<option value="Agent">AGENT</option>
+								<option value="Site">SITE</option>
+								<option value="Uar">UAR</option>
+								<option value="Infra">INFRA</option>
+							</select>
+							<button class="btn btn-primary btn-xs"
+								ng-click="raisettr(user,error)">Raise</button>
+						</p>
+						<p ng-if="user.bugId">
+							<a
+								ng-href="https://blrbugzilla.yodlee.com/show_bug.cgi?id={{user.bugId}}"
+								target="_blank" style="font-weight: bold;">{{user.bugId}}</a>
+						</p></td>
+					<td class="text-center"><button class="btn btn-primary btn-xs"
+							data-toggle="modal" data-target="#myModal"
+							ng-click="hourlyStatsInfo(user.class_name)" ng-model="agentName">Hourly
+							Stats</button>
+						<div class="modal fade" id="myModal" role="dialog">
+							<div class="modal-dialog modal-lg">
+								<div class="modal-content">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal">&times;</button>
+										<h4 class="modal-title">{{agentName}} Last 12 Hours Stats</h4>
+									</div>
+									<div class="modal-body">
+
+										<div class="text-center" ng-if="hourlyStatsLoading">
+											<img src="image/ajax-loader.gif" /><span>Loading,
+												Please wait...</span>
+										</div>
+										<table class="table table-striped table-responsive">
+											<!-- <caption>Last 12 Hours Stats</caption> -->
+											<tr>
+												<th>Refresh Time</th>
+												<th>Total</th>
+												<th>SUCCESS</th>
+												<th>AGENT</th>
+												<th>SITE</th>
+												<th>UAR</th>
+												<th>INFRA</th>
+												<th>Latency</th>
+											</tr>
+											<tr ng-repeat="stat in hourlyStats">
+												<td>{{stat.refresh_time}}</td>
+												<td>{{stat.total}}</td>
+												<td>{{stat.success}}</td>
+												<td>{{stat.agent_errors}}</td>
+												<td>{{stat.site_errors}}</td>
+												<td>{{stat.uar_error}}</td>
+												<td>{{stat.infra_error}}</td>
+												<td>{{stat.latency}}</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div></td>
+
+					<!-- <td class="text-center"><button class="btn btn-primary btn-xs"
+							ng-click="btnTxt=(btnTxt=='Enable')?'Disable':'Enable';showConfirm();"
+							ng-bind="btnTxt" ng-init="btnTxt='Disable'"></button>
+					</td> -->
+					<!-- <td>{{user.ils}}</td> -->
+
+				</tr>
+
+			</table>
+			<p style="text-align: center;">
+				<span ng-hide="limit >= output.length"
+					ng-click="limit = output.length"> <img
+					src="image/scroll-down.png" width="45" height="45" /></span>
+			</p>
+		</div>
+		<div ng-if="page=='other'">
+			<ng-view></ng-view>
+		</div>
+
+	</div>
+	<script th:inline="javascript">
+	var bar_opt = {
+		   hover: {
+		        animationDuration: 0
+		    },
+		    animation: {
+		        duration: 1,
+		        color :'black',
+		        onComplete: function () {
+		            var chartInstance = this.chart,
+		                ctx = chartInstance.ctx;
+		            ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, 'normal', Chart.defaults.global.defaultFontFamily);
+		            ctx.fillStyle = this.chart.config.options.defaultFontColor;
+		            ctx.textAlign = 'center';
+		            ctx.textBaseline = 'bottom';
+
+		            this.data.datasets.forEach(function (dataset, i) {
+		                var meta = chartInstance.controller.getDatasetMeta(i);
+		                meta.data.forEach(function (bar, index) {
+		                    var data = dataset.data[index];                            
+		                    ctx.fillText(data, bar._model.x, bar._model.y - 5);
+		                });
+		            });
+		        }
+		    },
+		    scales: {
+		        yAxes: [{
+		            ticks: {
+		                beginAtZero: true
+		            },
+		            scaleLabel: {
+			            display: true,
+			            labelString: 'TTR Bugs Count'
+			          }
+		        }],
+		        xAxes: [{
+		            
+		            scaleLabel: {
+			            display: true,
+			            labelString: 'TTR Bugs Age'
+			          }
+		        }]
+		    },
+		    legend: { display: false },
+		    title: {
+		        display: true,
+		        text: ' '
+		      }
+		   
+		    
+		};
+	var line_opt = {
+		    hover: {
+		        animationDuration: 0
+		    },
+		    animation: {
+		        duration: 1,
+		        color :'black',
+		        onComplete: function () {
+		            var chartInstance = this.chart,
+		                ctx = chartInstance.ctx;
+		            ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, 'normal', Chart.defaults.global.defaultFontFamily);
+		            ctx.fillStyle = this.chart.config.options.defaultFontColor;
+		            ctx.textAlign = 'center';
+		            ctx.textBaseline = 'bottom';
+
+		            this.data.datasets.forEach(function (dataset, i) {
+		                var meta = chartInstance.controller.getDatasetMeta(i);
+		                meta.data.forEach(function (bar, index) {
+		                    var data = dataset.data[index];                            
+		                    ctx.fillText(data, bar._model.x, bar._model.y - 5);
+		                });
+		            });
+		        }
+		    },
+		    scales: {
+		        yAxes: [{
+		          scaleLabel: {
+		            display: true,
+		            labelString: 'TTR Bugs Count'
+		          }
+		        }]
+		      }
+		      
+		};	
+	var ctx = document.getElementById('closedBugs').getContext('2d');
+	ctx.height = 50;
+	var closedCount=[[${closedBugs.values()}]];
+	var closedDates=[[${closedBugs.keySet()}]];
+	var openedCount=[[${openedBugs.values()}]];
+	
+	var myChart = new Chart(ctx, {
+	  type: 'line',
+	  data: {		  
+	    labels: closedDates,	    
+	    datasets: [{
+	      label: 'TTR Closure',
+	      data: closedCount,
+	      borderColor: "#1c91c0",
+	      backgroundColor:"#1c91c0",
+	      borderWidth: 2 ,
+	      pointRadius :2,
+	      fill:false
+	    }, {
+	        label: 'TTR Raised',
+	        data: openedCount,
+	        borderColor: "#e7711b",
+		    backgroundColor:"#e7711b",	       		
+	        borderWidth: 2 ,
+	        pointRadius :2,
+	        fill:false
+	      }
+	    ]
+	  },
+	options : line_opt
+	});	
+	</script>
+</body>
+<script src="webjars/angularjs/1.4.9/angular-resource.js"></script>
+<script src="webjars/angularjs/1.4.9/angular-route.js"></script>
+<script src="webjars/angularjs/1.4.9/angular-ui.js"></script>
+<script src="webjars/jquery/2.1.4/jquery.js"></script>
+<script src="webjars/bootstrap/3.3.7/js/bootstrap.js"></script>
+<script src="js/app.js"></script>
+<script>
+	/* $().ready(function() {
+		document.querySelectorAll("a[href='#/refreshStats']")[0].click();
+	}); */
+</script>
+</html>

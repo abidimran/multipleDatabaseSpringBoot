@@ -1,0 +1,280 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style type="text/css">
+body {
+	font-family: calibri;
+	font-size: 14px;
+	color: #004080;
+}
+
+table, th, td {
+	border: 1px solid black;
+	padding: 5px;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table tr:nth-child(odd) {
+	background-color: #f1f1f1;
+}
+
+table tr:nth-child(even) {
+	background-color: #ffffff;
+}
+
+th {
+	background-color: #006DCC;
+	color: white;
+	/* font-weight: bold; */
+	text-align: center;
+}
+td, th{
+	white-space:nowrap;
+}
+#color1 {
+	background-color: #00ff00;
+}
+
+#color2 {
+	background-color: #80ff80;
+}
+
+#color3 {
+	background-color: #ffff00;
+}
+
+#color4 {
+	background-color: #ff8000;
+}
+
+#color5 {
+	background-color: #ff4500;
+}
+</style>
+</head>
+<body>
+	<div>
+		<p>Hi Team,</p>
+		<p>Please find below TTR Portfolio status report.</p>
+		<table>
+			<tr>
+				<td>TTR Portfolio : Success Rate
+					<table style="width: 100%">
+						<!-- <caption>TTR Portfolio : Success Rate</caption> -->
+						<tr>
+							<th>LOCALE</th>
+							<th>>=95%</th>
+							<th>94-95%</th>
+							<th>92.5-94%</th>
+							<th>91-92.5%</th>
+							<th>&lt;91%</th>
+						</tr>
+						<tr th:each="item : ${statsMail}"
+							th:with="total=100/${item.total}">
+							<td th:text="${item.locale}"></td>
+							<td
+								th:text="${item.success}*${total}>=95?
+          ${#numbers.formatDecimal(item.success*total,1,2)}+'%'
+          :' '"
+								th:id="${item.success}*${total}>=95?
+          'color1':' '"></td>
+							<td
+								th:text="${item.success}*${total}>=94 AND ${item.success}*${total}&lt;95 ?
+          ${#numbers.formatDecimal(item.success*total,1,2)}+'%'
+          :' '"
+								th:id="${item.success}*${total}>=94 AND ${item.success}*${total}&lt;95 ?
+          'color2':'dummy'"></td>
+							<td
+								th:text="${item.success}*${total}>=92.5 AND ${item.success}*${total}&lt;94 ?
+          ${#numbers.formatDecimal(item.success*total,1,2)}+'%'
+          :' '"
+								th:id="${item.success}*${total}>=92.5 AND ${item.success}*${total}&lt;94 ?
+          'color3':' '"></td>
+							<td
+								th:text="${item.success}*${total}>=91 AND ${item.success}*${total}&lt;92.5 ?
+          ${#numbers.formatDecimal(item.success*total,1,2)}+'%'
+          :' '"
+								th:id="${item.success}*${total}>=91 AND ${item.success}*${total}&lt;92.5 ?
+          'color4':' '"></td>
+							<td
+								th:text="91&gt;${item.success}*${total}?
+          ${#numbers.formatDecimal(item.success*total,1,2)}+'%'
+          :' '"
+								th:id="91&gt;${item.success}*${total}?
+          'color5':' '"></td>
+						</tr>
+					</table>
+				</td>
+				<td>TTR Portfolio : Locale Contribution
+					breakup
+					<table style="width: 100%">
+						<!-- <caption>TTR Portfolio : Locale Contribution breakup</caption> -->
+						<tr>
+							<th>LOCALE</th>
+							<th>TOTAL</th>
+							<th>SUCCESS</th>
+							<th>AGENT</th>
+							<th>SITE</th>
+							<th>UAR</th>
+							<th>INFRA</th>
+							<th>NULL_CII</th>
+						</tr>
+						<tr th:each="item : ${statsMail[0]}"
+							th:with="total=100/${statsMail[0].total}">
+							<td th:text="${item.locale}"></td>
+							<td th:text="${#numbers.formatDecimal(item.total*total,1,2)}+'%'"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.success*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.agent*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.site*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.uar*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.infra*total,1,2)}+'%'"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.null_cii*total,1,2)}+'%'"></td>
+						</tr>
+						<tr th:each="item : ${statsMail}"
+							th:with="total=100/${statsMail[1].total}"
+							th:if="${item.locale}!='US'">
+							<td th:text="${item.locale}"></td>
+							<td th:text="${#numbers.formatDecimal(item.total*total,1,2)}+'%'"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.success*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.agent*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.site*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.uar*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.infra*total,1,2)}+'%'"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.null_cii*total,1,2)}+'%'"></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>TTR Portfolio : Locale Overview
+					<table style="width: 100%">
+						<!-- <caption>TTR Portfolio : Locale Overview</caption>  -->
+						<tr>
+							<th>LOCALE</th>
+							<th>SUCCESS</th>
+							<th>AGENT</th>
+							<th>SITE</th>
+							<th>UAR</th>
+							<th>INFRA</th>
+							<th>NULL_CII</th>
+						</tr>
+						<tr th:each="item : ${statsMail}"
+							th:with="total=100/${item.total}">
+							<td th:text="${item.locale}"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.success*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.agent*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.site*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.uar*total,1,2)}+'%'"></td>
+							<td th:text="${#numbers.formatDecimal(item.infra*total,1,2)}+'%'"></td>
+							<td
+								th:text="${#numbers.formatDecimal(item.null_cii*total,1,2)}+'%'"></td>
+						</tr>
+					</table>
+				</td>
+				<td>TTR Portfolio : Refresh count on day
+					<table style="width: 100%">
+						<!-- <caption>TTR Portfolio : Refresh count on day</caption> -->
+						<tr>
+							<th>LOCALE</th>
+							<th>TOTAL</th>
+							<th>SUCCESS</th>
+							<th>AGENT</th>
+							<th>SITE</th>
+							<th>UAR</th>
+							<th>INFRA</th>
+							<th>NULL_CII</th>
+						</tr>
+						<tr th:each="item : ${statsMail}">
+							<td th:text="${item.locale}"></td>
+							<td th:text="${item.total}"></td>
+							<td th:text="${item.success}"></td>
+							<td th:text="${item.agent}"></td>
+							<td th:text="${item.site}"></td>
+							<td th:text="${item.uar}"></td>
+							<td th:text="${item.infra}"></td>
+							<td th:text="${item.null_cii}"></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+			<td>ILS Stats
+				<table style="width: 100%">
+					<tr>
+						<th>LOCALE</th>
+						<th>TOTAL</th>
+						<th>SUCCESS</th>
+						<th>AGENT</th>
+						<th>SITE</th>
+						<th>UAR</th>
+						<th>INFRA</th>
+						<th>NULL_CII</th>
+					</tr>
+					<tr th:each="item : ${ilsData}" th:if="${item.ils}" th:with="total=100/${item.total}">
+							<td th:text="${item.locale}"></td>
+							<td th:text="${item.total}"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')' }"
+							th:if="${item.success}*${total}>=95" th:id="color1"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=94 AND ${item.success}*${total}&lt;95" th:id="color2"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=92.5 AND ${item.success}*${total}&lt;94" th:id="color3"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=91 AND ${item.success}*${total}&lt;92.5" th:id="color4"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="91&gt;${item.success}*${total}" th:id="color5"></td><!-- </b> -->
+							<td th:text="${item.agent + '('+ #numbers.formatDecimal(item.agent*total,1,2)+'%'+')' }"></td>
+							<td th:text="${item.site + '('+ #numbers.formatDecimal(item.site*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.uar + '('+ #numbers.formatDecimal(item.uar*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.infra + '('+ #numbers.formatDecimal(item.infra*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.null_cii + '('+ #numbers.formatDecimal(item.null_cii*total,1,2)+'%'+')'}"></td>
+						</tr>
+					</table>
+			</td>
+			<td>NON-ILS Locale wise Stats
+				<table style="width: 100%">
+					<tr>
+						<th>LOCALE</th>
+						<th>TOTAL</th>
+						<th>SUCCESS</th>
+						<th>AGENT</th>
+						<th>SITE</th>
+						<th>UAR</th>
+						<th>INFRA</th>
+						<th>NULL_CII</th>
+					</tr>
+					<tr th:each="item : ${ilsData}" th:if="!${item.ils}" th:with="total=100/${item.total}">
+							<td th:text="${item.locale}"></td>
+							<td th:text="${item.total}"></td>							
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')' }"
+							th:if="${item.success}*${total}>=95" th:id="color1"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=94 AND ${item.success}*${total}&lt;95" th:id="color2"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=92.5 AND ${item.success}*${total}&lt;94" th:id="color3"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="${item.success}*${total}>=91 AND ${item.success}*${total}&lt;92.5" th:id="color4"></td>
+							<td style="font-weight: bold;color: black;" th:text="${item.success + '('+ #numbers.formatDecimal(item.success*total,1,2)+'%'+')'}"
+							th:if="91&gt;${item.success}*${total}" th:id="color5"></td><!-- </b> -->
+							<td th:text="${item.agent + '('+ #numbers.formatDecimal(item.agent*total,1,2)+'%'+')' }"></td>
+							<td th:text="${item.site + '('+ #numbers.formatDecimal(item.site*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.uar + '('+ #numbers.formatDecimal(item.uar*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.infra + '('+ #numbers.formatDecimal(item.infra*total,1,2)+'%'+')'}"></td>
+							<td th:text="${item.null_cii + '('+ #numbers.formatDecimal(item.null_cii*total,1,2)+'%'+')'}"></td>
+						</tr>
+				</table>
+			</td>
+			</tr> 
+			
+		</table>
+	</div>
+</body>
+</html>

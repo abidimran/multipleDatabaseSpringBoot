@@ -1,0 +1,8 @@
+com\abid\model\Club.class
+com\abid\service\ClubService.class
+com\abid\controller\CampaignController.class
+com\abid\controller\ClubController.class
+com\abid\model\SmsCampaign.class
+com\abid\MultipleDatabaseApplication.class
+com\abid\repository\ClubReposiotory.class
+com\abid\repository\SmsCampaignReposiotory.class
